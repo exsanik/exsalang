@@ -1,0 +1,16 @@
+{
+  "name": "parser",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Parser.js",
+  "scripts": {
+    "test": "node --es-module-specifier-resolution=node ./__tests__/run.js",
+    "test-jest": "node --experimental-vm-modules node_modules/.bin/jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^27.0.4"
+  }
+}

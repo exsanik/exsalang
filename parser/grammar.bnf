@@ -1,0 +1,248 @@
+Program
+  : StatementList
+  ;
+
+StatementList
+  : Statement
+  | StatementList Statement
+  ;
+
+Statement
+  : ExpressionStatement
+  | BlockStatement
+  | EmptyStatement
+  | VariableStatement
+  | IfStatement
+  | IterationStatement
+  | FunctionDeclaration
+  | ReturnStatement
+  | ClassDeclaration
+  ;
+
+ClassDeclaration
+   : 'class' Identifier OptClassExtends BlockStatement
+   ;
+
+ClassExtends
+  : 'extends' Identifier
+  ;
+
+ReturnStatement
+  : 'return' OptExpression ';'
+  ;
+
+FunctionDeclaration
+  : 'def' Identifier '(' OptFormalParametersList ')' BlockStatement
+  ;
+
+FormalParametersList
+   : Identifier
+   | FormalParametersList ',' Identifier
+   ;
+
+IfStatement
+  : 'if' Expression Statement
+  : 'if' Expression Statement 'else' Statement
+  ;
+
+IterationStatement
+  : WhileStatement
+  | DoWhileStatement
+  | ForStatement
+  | ForEachStatement
+  ;
+
+WhileStatement
+  : 'while' Expression  Statement
+  ;
+
+DoWhileStatement
+  : 'do' Statement 'while' Expression ';'
+  ;
+
+ForStatement
+  : 'for' OptForStatementInit ';' OptExpression ';' OptExpression  Statement
+  ;
+
+ForEachStatement
+  : 'foreach' VariableInitList in OptExpression ';' Statement
+  ;
+
+ForStatementInit
+  : VariableStatementInit
+  | Expression
+  ;
+
+VariableInitList
+  : VariableInit
+  | VariableInitList VariableInit
+  ;
+
+VariableInit
+  : 'let' Identifier
+  ;
+
+VariableStatementInit
+  : 'let' VariableDeclarationList
+  ;
+
+VariableStatement
+  : VariableStatementInit ';'
+  ;
+
+EmptyStatement
+  : /* epsilon */
+  ;
+
+ExpressionStatement
+  : Expression
+  ;
+
+BlockStatement
+  : '{' OptStatementList '}'
+  ;
+
+Expression: 
+  : AssignmentExpression
+  ;
+
+VariableDeclarationList
+  : VariableDeclaration
+  | VariableDeclarationList ',' VariableDeclaration
+  ;
+
+VariableDeclaration
+  : Identifier OptVariableInitializer
+  ;
+
+VariableInitializer
+  : SIMPLE_ASSIGN AssignmentExpression
+  ;
+
+AssignmentExpression
+  : LogicalOrExpression
+  | LogicalOrExpression AssignmentOperator AssignmentExpression
+  ;
+
+AssignmentOperator
+  : SIMPLE_ASSIGN
+  | COMPLEX_ASSIGN
+  ;
+
+LogicalOrExpression
+   : LogicalAndExpression LOGICAL_OR LogicalOrExpression
+   | LogicalOrExpression
+   ;
+
+LogicalAndExpression
+  : EqualityExpression LOGICAL_AND LogicalAndExpression
+  | EqualityExpression
+  ;
+
+EqualityExpression
+  : RelationalExpression EQUALITY_OPERATOR EqualityExpression
+  | RelationalExpression
+  ;
+
+RelationalExpression
+  : AdditiveExpression
+  | AdditiveExpression RELATIONAL_OPERATOR RelationalExpression
+  ;
+
+AdditiveExpression
+  : MultiplicativeExpression
+  | MultiplicativeExpression ADDITIVE_OPERATOR MultiplicativeExpression
+  ;
+
+MultiplicativeExpression
+   : UnaryExpression
+   | MultiplicativeExpression MULTIPLICATIVE_OPERATOR UnaryExpression
+   ;
+
+UnaryExpression
+  : LeftHandSideExpression
+  | ADDITIVE_OPERATOR UnaryExpression
+  | LOGICAL_NOT UnaryExpression
+  ;
+
+LeftHandSideExpression
+  : CallMemberExpression
+  ;
+
+CallMemberExpression
+  : MemberExpression
+  | CallExpression
+  | Super
+  ;
+
+MemberExpression
+  : PrimaryExpression
+  | MemberExpression '.' Identifier
+  | MemberExpression '[' Expression ']'
+  ;
+
+CallExpression
+  : Callee Arguments
+  ;
+   
+Callee
+  : MemberExpression
+  | CallExpression
+  ;
+
+Super
+  : 'super'
+  ;
+
+PrimaryExpression:
+  : Literal
+  | ParenthesizedExpression
+  | Identifier
+  | ThisExpression
+  | NewExpression
+  ;
+
+Literal:
+  : NumericLiteral
+  | StringLiteral
+  | BooleanLiteral
+  | NullLiteral
+  | UndefinedLiteral
+  ;
+
+ParenthesizedExpression
+  : '(' Expression ')'
+  ;
+
+Identifier
+  : IDENTIFIER
+  ;
+
+ThisExpression
+  : 'this'
+  ;
+
+NewExpression
+  : 'new' MemberExpression Arguments
+  ;
+
+BooleanLiteral
+  : 'true'
+  | 'false'
+  ;
+
+NullLiteral
+   : 'null'
+   ;
+
+UndefinedLiteral
+  : 'undefined'
+  ;
+
+StringLiteral
+  : STRING
+  ;
+
+NumericLiteral
+  : NUMBER
+  ;
