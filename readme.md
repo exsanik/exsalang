@@ -6,4 +6,4 @@
 # Interpreter
 
 - main file: /interpreter/Exsa.js
-- call method Exsa.evalGlobal AST given by parser
+- call method Exsa.evalGlobal with AST given by parser
