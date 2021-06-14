@@ -10,6 +10,7 @@ export const tokens = {
   CLOSE_SQUARE_BRACKET: "]",
   COMA: ",",
   DOT: ".",
+  COLON: ":",
 
   ADDITIVE_OPERATOR: "ADDITIVE_OPERATOR",
   MULTIPLICATIVE_OPERATOR: "MULTIPLICATIVE_OPERATOR",
@@ -99,6 +100,7 @@ export const SPEC = [
   { regex: /^[><]=?/, type: tokens.RELATIONAL_OPERATOR },
 
   { regex: /^;/, type: tokens.SEMICOLON },
+  { regex: /^:/, type: tokens.COLON },
   { regex: /^\{/, type: tokens.OPEN_CURLY_BRACE },
   { regex: /^\}/, type: tokens.CLOSE_CURLY_BRACE },
   { regex: /^\(/, type: tokens.OPEN_PARENTHESIS },

@@ -220,11 +220,43 @@ class Exsa {
 
       const prop = computed ? this.eval(property, env) : property;
       const localObj = this.eval(object, env);
-      if (!!localObj.lookup) {
+
+      if (localObj.lookup) {
         return localObj.lookup(prop.name || prop.value);
       } else {
-        return localObj[prop.name || prop.value];
+        if (typeof prop === "object") {
+          return localObj[prop.name || prop.value];
+        }
+        return localObj[prop];
       }
+    }
+
+    if (ast.type === astTypes.ComputedExpression) {
+      return this.eval(ast.expression, env);
+    }
+
+    if (ast.type === astTypes.ObjectLiteral) {
+      const properties = ast.properties
+        .map((prop) => this.eval(prop, env))
+        .reduce((acc, prop) => ({ ...acc, ...prop }), {});
+
+      return properties;
+    }
+
+    if (ast.type === astTypes.ArrayLiteral) {
+      const arrayItems = ast.list.map((item) => this.eval(item, env));
+
+      return arrayItems;
+    }
+
+    if (ast.type === astTypes.Property) {
+      const value = this.eval(ast.value, env);
+
+      if (ast.name.name) {
+        return { [ast.name.name]: value };
+      }
+
+      return { [this.eval(ast.name, env)]: value };
     }
 
     if (ast.type === astTypes.EmptyStatement) {

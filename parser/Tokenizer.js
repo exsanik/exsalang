@@ -4,6 +4,7 @@ export class Tokenizer {
   init(string) {
     this._string = string;
     this._cursor = 0;
+    this._cursorMoves = [];
   }
 
   hasMoreTokens() {
@@ -39,6 +40,7 @@ export class Tokenizer {
       // ignore whitespace for e.g.
       if (type === null) return this.getNextToken();
 
+      this._cursorMoves.push({ type, value: result, move: result.length });
       return {
         type,
         value: result,
@@ -46,5 +48,17 @@ export class Tokenizer {
     }
 
     throw new SyntaxError(`Unexpected token: ${string[0]}`);
+  }
+
+  tokenizeSource() {
+    let next;
+    while (next !== null) {
+      next = this.getNextToken();
+    }
+  }
+
+  getMove(cursor) {
+    const move = this._cursorMoves[cursor];
+    return move === undefined ? null : move;
   }
 }

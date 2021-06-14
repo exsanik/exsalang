@@ -93,8 +93,11 @@ describe("member expression tests", () => {
                 name: "x",
               },
               property: {
-                type: "NumericLiteral",
-                value: 0,
+                type: "ComputedExpression",
+                expression: {
+                  type: "NumericLiteral",
+                  value: 0,
+                },
               },
             },
             right: {
@@ -142,8 +145,11 @@ describe("member expression tests", () => {
               },
             },
             property: {
-              type: "StringLiteral",
-              value: "d",
+              type: "ComputedExpression",
+              expression: {
+                type: "StringLiteral",
+                value: "d",
+              },
             },
           },
         },

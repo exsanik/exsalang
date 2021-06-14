@@ -64,6 +64,17 @@ describe("loops tests", () => {
     expect(exsa.evalGlobal(program)).toBe(42);
   });
 
+  test("it should pass callback", () => {
+    const program = `
+        def fn(cb) {
+            return "callback passed";
+        }
+
+        fn(def (val) { val; });
+    `;
+    expect(exsa.evalGlobal(program)).toBe("callback passed");
+  });
+
   test("it should create closure function with part usement", () => {
     const program = `
         def sum(a) {

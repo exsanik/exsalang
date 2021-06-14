@@ -18,6 +18,8 @@ export const astTypes = {
   BooleanLiteral: "BooleanLiteral",
   NullLiteral: "NullLiteral",
   UndefinedLiteral: "UndefinedLiteral",
+  ObjectLiteral: "ObjectLiteral",
+  ArrayLiteral: "ArrayLiteral",
   Identifier: "Identifier",
 
   AssignmentExpression: "AssignmentExpression",
@@ -28,12 +30,14 @@ export const astTypes = {
   CallExpression: "CallExpression",
   ThisExpression: "ThisExpression",
   NewExpression: "NewExpression",
+  ComputedExpression: "ComputedExpression",
 
   VariableDeclaration: "VariableDeclaration",
   FunctionDeclaration: "FunctionDeclaration",
   ClassDeclaration: "ClassDeclaration",
 
   Super: "Super",
+  Property: "Property",
 };
 
 export const astHelpers = {
@@ -188,10 +192,31 @@ export const factory = {
     property,
   }),
 
+  ComputedExpression: (expression) => ({
+    type: astTypes.ComputedExpression,
+    expression,
+  }),
+
   CallExpression: (callee, args) => ({
     type: astTypes.CallExpression,
     callee,
     arguments: args,
+  }),
+
+  ObjectLiteral: (properties) => ({
+    type: astTypes.ObjectLiteral,
+    properties,
+  }),
+
+  ArrayLiteral: (list) => ({
+    type: astTypes.ArrayLiteral,
+    list,
+  }),
+
+  Property: (name, value) => ({
+    type: astTypes.Property,
+    name,
+    value,
   }),
 
   ClassDeclaration: (id, superClass, body) => ({

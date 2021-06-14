@@ -1,6 +1,6 @@
 import { Tokenizer } from "./Tokenizer";
 import { tokens } from "./SpecTokens";
-import { factory } from "./AstFactory";
+import { factory, astTypes } from "./AstFactory";
 
 export class Parser {
   constructor() {
@@ -11,10 +11,16 @@ export class Parser {
   parse(string) {
     this._string = string;
     this._tokenizer.init(string);
+    this._tokenizer.tokenizeSource();
+    this._cursor = 0;
 
-    this._lookahead = this._tokenizer.getNextToken();
+    this._lookahead = this.#nextMove();
 
     return this.Program();
+  }
+
+  #nextMove() {
+    return this._tokenizer.getMove(this._cursor++);
   }
 
   #eat(tokenType) {
@@ -30,7 +36,7 @@ export class Parser {
       );
     }
 
-    this._lookahead = this._tokenizer.getNextToken();
+    this._lookahead = this.#nextMove();
 
     return token;
   }
@@ -56,6 +62,31 @@ export class Parser {
     return [tokens.SIMPLE_ASSIGN, tokens.COMPLEX_ASSIGN].includes(tokenType);
   }
 
+  #returnCursorToPosition(position, lookahead) {
+    this._cursor = position;
+    this._lookahead = lookahead;
+  }
+
+  #isObjectLiteral() {
+    const startCursor = this._cursor;
+    const startLookahead = this._lookahead;
+
+    try {
+      this.#eat(tokens.OPEN_CURLY_BRACE);
+      const result = this.Property();
+      this.#returnCursorToPosition(startCursor, startLookahead);
+
+      if (result.type === astTypes.Property) {
+        return true;
+      }
+      return false;
+    } catch {
+      this.#returnCursorToPosition(startCursor, startLookahead);
+
+      return false;
+    }
+  }
+
   #isLiteral(tokenType) {
     return [
       tokens.NUMBER,
@@ -64,6 +95,8 @@ export class Parser {
       tokens.FALSE,
       tokens.NULL,
       tokens.UNDEFINED,
+      tokens.OPEN_SQUARE_BRACKET,
+      tokens.OPEN_CURLY_BRACE,
     ].includes(tokenType);
   }
 
@@ -427,12 +460,22 @@ export class Parser {
     return factory.EmptyStatement();
   }
 
+  #routeToObjectLiteral() {
+    if (this.#isObjectLiteral()) {
+      return this.ObjectLiteral();
+    }
+    return null;
+  }
+
   /**
    * BlockStatement
    *  : '{' OptStatementList '}'
    *  ;
    */
   BlockStatement() {
+    const result = this.#routeToObjectLiteral();
+    if (result) return result;
+
     this.#eat(tokens.OPEN_CURLY_BRACE);
 
     const body = this.#checkIfNotLookahead(tokens.CLOSE_CURLY_BRACE)
@@ -550,8 +593,6 @@ export class Parser {
 
   AssignmentStatement() {
     switch (this._lookahead.type) {
-      case tokens.SEMICOLON:
-        return this.EmptyStatement();
       case tokens.IF:
         return this.IfStatement();
       case tokens.OPEN_CURLY_BRACE:
@@ -572,7 +613,7 @@ export class Parser {
 
   /**
    * ImportStatement
-   *   : import IDENTIFIER from STRING_LITERAL
+   *   : import IDENTIFIER from StringLiteral
    *   :
    */
   ImportStatement() {
@@ -602,13 +643,13 @@ export class Parser {
    *  ;
    */
   CallMemberExpression() {
-    if (this._lookahead.type === tokens.SUPER) {
+    if (this.#checkIfLookahead(tokens.SUPER)) {
       return this._CallExpression(this.Super());
     }
 
     const member = this.MemberExpression();
 
-    if (this._lookahead.type === tokens.OPEN_PARENTHESIS) {
+    if (this.#checkIfLookahead(tokens.OPEN_PARENTHESIS)) {
       return this._CallExpression(member);
     }
 
@@ -643,10 +684,9 @@ export class Parser {
   Arguments() {
     this.#eat(tokens.OPEN_PARENTHESIS);
 
-    const argumentList =
-      this._lookahead.type !== tokens.CLOSE_PARENTHESIS
-        ? this.ArgumentList()
-        : [];
+    const argumentList = this.#checkIfNotLookahead(tokens.CLOSE_PARENTHESIS)
+      ? this.ArgumentList()
+      : [];
 
     this.#eat(tokens.CLOSE_PARENTHESIS);
 
@@ -678,8 +718,8 @@ export class Parser {
     let object = this.PrimaryExpression();
 
     while (
-      this._lookahead.type === tokens.DOT ||
-      this._lookahead.type === tokens.OPEN_SQUARE_BRACKET
+      this.#checkIfLookahead(tokens.DOT) ||
+      this.#checkIfLookahead(tokens.OPEN_SQUARE_BRACKET)
     ) {
       if (this._lookahead.type === tokens.DOT) {
         this.#eat(tokens.DOT);
@@ -688,10 +728,8 @@ export class Parser {
       }
 
       if (this._lookahead.type === tokens.OPEN_SQUARE_BRACKET) {
-        this.#eat(tokens.OPEN_SQUARE_BRACKET);
-        const property = this.Expression();
-        this.#eat(tokens.CLOSE_SQUARE_BRACKET);
-        object = factory.MemberExpression(true, object, property);
+        const computedProperty = this.ComputedExpression();
+        object = factory.MemberExpression(true, object, computedProperty);
       }
     }
 
@@ -782,6 +820,19 @@ export class Parser {
   }
 
   /**
+   * ComputedExpression
+   *  : '[' Expression ']'
+   *  ;
+   */
+  ComputedExpression() {
+    this.#eat(tokens.OPEN_SQUARE_BRACKET);
+    const expression = this.Expression();
+    this.#eat(tokens.CLOSE_SQUARE_BRACKET);
+
+    return factory.ComputedExpression(expression);
+  }
+
+  /**
    * NewExpression
    *  : 'new' MemberExpression Arguments
    *  ;
@@ -830,6 +881,7 @@ export class Parser {
    *  | BooleanLiteral
    *  | NullLiteral
    *  | UndefinedLiteral
+   *  | ObjectLiteral
    *  ;
    */
   Literal() {
@@ -844,11 +896,94 @@ export class Parser {
         return this.BooleanLiteral(false);
       case tokens.NULL:
         return this.NullLiteral();
+      case tokens.OPEN_CURLY_BRACE:
+        return this.ObjectLiteral();
+      case tokens.OPEN_SQUARE_BRACKET:
+        return this.ArrayLiteral();
       case tokens.UNDEFINED:
         return this.UndefinedLiteral();
     }
 
     throw new SyntaxError("Literal: unexpected literal production");
+  }
+
+  /**
+   * ObjectLiteral
+   *   : '{' OptPropertiesList '}'
+   */
+  ObjectLiteral() {
+    this.#eat(tokens.OPEN_CURLY_BRACE);
+    const properties = this.#checkIfNotLookahead(tokens.CLOSE_CURLY_BRACE)
+      ? this.PropertiesList()
+      : null;
+    this.#eat(tokens.CLOSE_CURLY_BRACE);
+
+    return factory.ObjectLiteral(properties);
+  }
+
+  /**
+   * ArrayLiteral
+   *  : '[' OptLiteralList ']'
+   */
+  ArrayLiteral() {
+    this.#eat(tokens.OPEN_SQUARE_BRACKET);
+
+    const literalList = this.#checkIfNotLookahead(tokens.CLOSE_SQUARE_BRACKET)
+      ? this.ExpressionList()
+      : [];
+
+    this.#eat(tokens.CLOSE_SQUARE_BRACKET);
+
+    return factory.ArrayLiteral(literalList);
+  }
+
+  /**
+   * ExpressionList
+   *  : ExpressionList LogicalOrExpression
+   *  | LogicalOrExpression
+   *  ;
+   */
+  ExpressionList() {
+    const literalList = [];
+
+    do {
+      literalList.push(this.LogicalOrExpression());
+    } while (this.#checkIfLookahead(tokens.COMA) && this.#eat(tokens.COMA));
+
+    return literalList;
+  }
+
+  /**
+   * PropertiesList
+   *   : Property
+   *   | PropertiesList Property
+   */
+  PropertiesList() {
+    const propertyList = [];
+
+    while (this.#checkIfNotLookahead(tokens.CLOSE_CURLY_BRACE)) {
+      propertyList.push(this.Property());
+      if (this.#checkIfNotLookahead(tokens.CLOSE_CURLY_BRACE)) {
+        this.#eat(tokens.COMA);
+      }
+    }
+
+    return propertyList;
+  }
+
+  /**
+   * Property
+   *  : IDENTIFIER':' Literal
+   *  | ComputedExpression':' Literal
+   */
+  Property() {
+    const name = this.#checkIfLookahead(tokens.OPEN_SQUARE_BRACKET)
+      ? this.ComputedExpression()
+      : this.Identifier();
+    this.#eat(tokens.COLON);
+    const value = this.Literal();
+
+    return factory.Property(name, value);
   }
 
   /**
