@@ -99,6 +99,42 @@ describe("binary expressions tests", () => {
     });
   });
 
+  test("it should handle multiplicative binary expression", () => {
+    const program = `
+        2 ** 2 * 2;
+    `;
+    const ast = parser.parse(program);
+
+    expect(ast).toEqual({
+      type: "Program",
+      body: [
+        {
+          type: "ExpressionStatement",
+          expression: {
+            type: "BinaryExpression",
+            operator: "*",
+            left: {
+              type: "BinaryExpression",
+              operator: "**",
+              left: {
+                type: "NumericLiteral",
+                value: 2,
+              },
+              right: {
+                type: "NumericLiteral",
+                value: 2,
+              },
+            },
+            right: {
+              type: "NumericLiteral",
+              value: 2,
+            },
+          },
+        },
+      ],
+    });
+  });
+
   test("it should handle nested multiplicative binary expression with right order", () => {
     const program = `
         2 + 2 * 2;

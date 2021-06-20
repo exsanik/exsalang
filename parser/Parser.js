@@ -12,6 +12,7 @@ export class Parser {
     this._string = string;
     this._tokenizer.init(string);
     this._tokenizer.tokenizeSource();
+
     this._cursor = 0;
 
     this._lookahead = this.#nextMove();
@@ -758,13 +759,25 @@ export class Parser {
 
   /**
    * MultiplicativeExpression
-   *  : UnaryExpression
-   *  | MultiplicativeExpression OPERATOR UnaryExpression
+   *  : PowExpression
+   *  | MultiplicativeExpression OPERATOR PowExpression
    */
   MultiplicativeExpression() {
     return this.#binaryExpressionGenerator(
-      this.UnaryExpression.bind(this),
+      this.PowExpression.bind(this),
       tokens.MULTIPLICATIVE_OPERATOR
+    );
+  }
+
+  /**
+   * PowExpression
+   *  : UnaryExpression
+   *  | PowExpression OPERATOR UnaryExpression
+   */
+  PowExpression() {
+    return this.#binaryExpressionGenerator(
+      this.UnaryExpression.bind(this),
+      tokens.POW_OPERATOR
     );
   }
 

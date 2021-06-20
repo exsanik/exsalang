@@ -62,7 +62,15 @@ class Exsa {
           );
         }
 
-        return this.eval(object, env).define(
+        const defineEnv = this.eval(object, env);
+
+        if (!defineEnv.define) {
+          const assignRight = this.eval(ast.right, env);
+          defineEnv[prop.name || prop.value || prop] = assignRight;
+          return assignRight;
+        }
+
+        return defineEnv.define(
           prop.name || prop.value,
           this.eval(ast.right, env)
         );
@@ -100,7 +108,7 @@ class Exsa {
     if (ast.type === astTypes.UnaryExpression) {
       return this._execUnaryOperator(
         ast.operator,
-        this.eval(this.argument, env)
+        this.eval(ast.argument, env)
       );
     }
 
@@ -123,6 +131,9 @@ class Exsa {
         const prop = computed ? this.eval(property, env) : property;
 
         const callEnv = this.eval(object, env);
+        if (!callEnv.lookup) {
+          return callEnv[prop.name || prop.value || prop](...args);
+        }
 
         return this._callUserDefinedFunction(
           callEnv.lookup(prop.name),
@@ -149,6 +160,8 @@ class Exsa {
       let result;
       while (this.eval(ast.test, env)) {
         result = this.eval(ast.body, env);
+        const isReturn = this.hiddenEnv.getHiddenValue("isReturn");
+        if (isReturn) break;
       }
       return result;
     }
@@ -158,6 +171,8 @@ class Exsa {
       let result;
       for (this.eval(init, env); this.eval(test, env); this.eval(update, env)) {
         result = this.eval(body, env);
+        const isReturn = this.hiddenEnv.getHiddenValue("isReturn");
+        if (isReturn) break;
       }
       return result;
     }
@@ -166,6 +181,8 @@ class Exsa {
       let result;
       do {
         result = this.eval(ast.body, env);
+        const isReturn = this.hiddenEnv.getHiddenValue("isReturn");
+        if (isReturn) break;
       } while (this.eval(ast.test, env));
       return result;
     }
@@ -338,6 +355,7 @@ class Exsa {
       "-": () => left - right,
       "/": () => left / right,
       "*": () => left * right,
+      "**": () => left ** right,
       ">": () => left > right,
       ">=": () => left >= right,
       "<": () => left < right,
@@ -385,6 +403,7 @@ const GlobalEnvironmentConfig = {
   Array: global.Array,
   Object: global.Object,
   Math: global.Math,
+  Promise: global.Promise,
 };
 
 export default Exsa;

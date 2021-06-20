@@ -5,8 +5,8 @@
   "description": "",
   "main": "Parser.js",
   "scripts": {
-    "test": "node --es-module-specifier-resolution=node ./__tests__/run.js",
-    "test-jest": "node --experimental-vm-modules node_modules/.bin/jest"
+    "start": "node --es-module-specifier-resolution=node",
+    "jest": "node --experimental-vm-modules node_modules/.bin/jest"
   },
   "author": "",
   "license": "ISC",

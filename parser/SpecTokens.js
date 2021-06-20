@@ -16,6 +16,7 @@ export const tokens = {
   MULTIPLICATIVE_OPERATOR: "MULTIPLICATIVE_OPERATOR",
   RELATIONAL_OPERATOR: "RELATIONAL_OPERATOR",
   EQUALITY_OPERATOR: "EQUALITY_OPERATOR",
+  POW_OPERATOR: "POW_OPERATOR",
 
   IDENTIFIER: "IDENTIFIER",
 
@@ -110,6 +111,7 @@ export const SPEC = [
   { regex: /^\]/, type: tokens.CLOSE_SQUARE_BRACKET },
   { regex: /^\./, type: tokens.DOT },
 
+  { regex: /^\*\*/, type: tokens.POW_OPERATOR },
   { regex: /^[+\-]/, type: tokens.ADDITIVE_OPERATOR },
   { regex: /^[*\/]/, type: tokens.MULTIPLICATIVE_OPERATOR },
 ];
