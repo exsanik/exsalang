@@ -31,12 +31,12 @@ describe("complex programs tests", () => {
           let arr = [1, 2, 3, 4, 5, 6, 7];
           binarySearch(arr, 5, def (x, y) { 
             if x > y {
-                return 1;
-            } 
-            if x < y {
-               return -10;
+                1;
+            } else if x < y {
+               -1;
+            } else {
+                0;
             }
-            return 0; 
           });
       `;
 
